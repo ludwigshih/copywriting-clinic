@@ -3,10 +3,18 @@ function load(){try{return JSON.parse(localStorage.getItem(KEY))}catch(e){return
 function esc(s){return String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
 async function init(){
   try{
-    const response=await fetch('./unit01.json',{cache:'no-store'});
+    const response=await fetch('./unit01.json?v=20261127-2',{cache:'no-store'});
     if(!response.ok)throw new Error(`HTTP ${response.status}`);
     DATA=await response.json();
-    if(state.code){codeModal.classList.remove('show');doctorLabel.textContent='Dr.'+state.code}
+    if(state.code){
+      doctorLabel.textContent='Dr.'+state.code;
+      const title=document.querySelector('#codeModal .doctor-code-block label b');
+      if(title)title.textContent='繼續使用醫生代號';
+      if(codeInput)codeInput.value=state.code;
+      const startButton=document.querySelector('#codeModal .welcome-primary');
+      if(startButton)startButton.textContent=`以 Dr.${state.code} 繼續第一單元`;
+    }
+    codeModal.classList.add('show');
     renderHome();renderPractice();
   }catch(error){
     console.error('unit01.json 載入失敗',error);
@@ -153,4 +161,15 @@ function showToast(message,type='success'){
 function importJSON(file){if(!file)return;let r=new FileReader();r.onload=()=>{try{let x=JSON.parse(r.result);if(x.unit!=='unit01'||!x.state)throw Error();state=x.state;save();doctorLabel.textContent='Dr.'+state.code;renderHome();renderPractice();showReport();showToast(`已成功載入 Dr.${state.code||'未設定'} 的第一單元進度。已完成 ${Object.keys(state.answers||{}).length}／12 題。`,'success');jsonInput.value=''}catch(e){showToast('載入失敗。請選擇由第一單元產生的 JSON 存檔。','error');jsonInput.value=''}};r.readAsText(file,'utf-8')}
 function downloadCSV(){let rows=[['Dr.代號','類型','編號','能力／欄位','答案／句子','分數','提示層級','完成時間']];DATA.questions.forEach(q=>{let a=state.answers[q.id];if(a)rows.push(['Dr.'+state.code,'互動題',q.id,q.ability,a.value.map(i=>String.fromCharCode(65+i)).join('|'),a.score,state.hints[q.id]||0,a.time])});DATA.practice.fields.forEach(f=>{let p=state.practice[f.id];if(p?.sentence)rows.push(['Dr.'+state.code,'單元實作',f.id,f.name,p.sentence,p.score,'',state.practiceCompleted||''])});let csv='\ufeff'+rows.map(r=>r.map(v=>'"'+String(v??'').replaceAll('"','""')+'"').join(',')).join('\r\n'),blob=new Blob([csv],{type:'text/csv;charset=utf-8'}),a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=`文案急診室_Dr.${state.code}_第一單元報告.csv`;a.click();setTimeout(()=>URL.revokeObjectURL(a.href),1000)}
 function resetAll(){if(confirm('確定清除第一單元全部紀錄嗎？')){localStorage.removeItem(KEY);location.reload()}}
+// Explicitly expose navigation for Chrome and other browsers.
+Object.assign(window,{goHome,showGuide,showTools,showPage,startQuiz,showReport});
+// Add event listeners as a fallback if inline handlers are restricted or stale HTML is cached.
+document.addEventListener('click',event=>{
+  const button=event.target.closest('[data-nav]');
+  if(!button)return;
+  const target=button.dataset.nav;
+  if(target==='home')goHome();
+  if(target==='guide')showGuide();
+  if(target==='tools')showTools();
+});
 init();
