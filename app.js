@@ -2,174 +2,50 @@ let DATA=null; const KEY='copyClinicUnit01V1'; let state=load()||{code:'',answer
 function load(){try{return JSON.parse(localStorage.getItem(KEY))}catch(e){return null}} function save(){try{localStorage.setItem(KEY,JSON.stringify(state))}catch(e){}}
 function esc(s){return String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
 async function init(){
-  try{
-    const response=await fetch('./unit01.json?v=20261127-2',{cache:'no-store'});
-    if(!response.ok)throw new Error(`HTTP ${response.status}`);
-    DATA=await response.json();
-    if(state.code){
-      doctorLabel.textContent='Dr.'+state.code;
-      const title=document.querySelector('#codeModal .doctor-code-block label b');
-      if(title)title.textContent='繼續使用醫生代號';
-      if(codeInput)codeInput.value=state.code;
-      const startButton=document.querySelector('#codeModal .welcome-primary');
-      if(startButton)startButton.textContent=`以 Dr.${state.code} 繼續第一單元`;
-    }
-    codeModal.classList.add('show');
-    renderHome();renderPractice();
-  }catch(error){
-    console.error('unit01.json 載入失敗',error);
-    document.body.innerHTML='<main style="max-width:720px;margin:48px auto;padding:24px;font-family:Microsoft JhengHei,sans-serif"><section style="background:#fff;border:1px solid #d8e3ee;border-top:7px solid #b64343;border-radius:20px;padding:28px"><h1 style="color:#17365d">題庫載入失敗</h1><p>網站無法讀取 <b>unit01.json</b>。請確認 index.html、style.css、app.js 與 unit01.json 都位於 GitHub 儲存庫的同一層，再重新整理頁面。</p><p style="color:#66788a">此正式版必須透過 GitHub Pages 或其他 HTTP 網站開啟，不能直接雙擊本機 index.html。</p></section></main>';
-  }
+ try{
+  const response=await fetch('./unit01.json?v=20261127-5',{cache:'no-store'}); if(!response.ok)throw new Error(`HTTP ${response.status}`); DATA=await response.json();
+  if(state.code){doctorLabel.textContent='Dr.'+state.code;const title=document.querySelector('#codeModal .doctor-code-block label b');if(title)title.textContent='繼續使用醫生代號';if(codeInput)codeInput.value=state.code;const startButton=document.querySelector('#codeModal .welcome-primary');if(startButton)startButton.textContent=`以 Dr.${state.code} 繼續第一單元`}
+  codeModal.classList.add('show');renderHome();renderPractice();
+ }catch(error){console.error('unit01.json 載入失敗',error);document.body.innerHTML='<main style="max-width:720px;margin:48px auto;padding:24px;font-family:Microsoft JhengHei,sans-serif"><section style="background:#fff;border:1px solid #d8e3ee;border-top:7px solid #b64343;border-radius:20px;padding:28px"><h1 style="color:#17365d">題庫載入失敗</h1><p>網站無法讀取 <b>unit01.json</b>，或互動程式初始化失敗。請確認 index.html、style.css、app.js 與 unit01.json 位於同一層。</p></section></main>'}
 }
 function setCode(){let v=codeInput.value.trim().replace(/^Dr\.?/i,'');if(v.length<2){codeError.textContent='醫生代號至少需要兩個字元。';return}state.code=v;save();codeModal.classList.remove('show');doctorLabel.textContent='Dr.'+v;renderHome();showToast(`歡迎 Dr.${v}，第一單元已準備完成。`,'success')}
-function importWelcomeJSON(file){
-  if(!file)return;
-  let r=new FileReader();
-  r.onload=()=>{try{
-    let x=JSON.parse(r.result);if(x.unit!=='unit01'||!x.state)throw Error();
-    state=x.state;save();codeModal.classList.remove('show');doctorLabel.textContent='Dr.'+(state.code||'未設定');renderHome();renderPractice();showReport();showToast(`已成功載入 Dr.${state.code||'未設定'} 的第一單元進度。已完成 ${Object.keys(state.answers||{}).length}／12 題。`,'success');welcomeJsonInput.value='';
-  }catch(e){codeModal.classList.add('show');showToast('載入失敗。請選擇由第一單元產生的 JSON 存檔。','error');welcomeJsonInput.value=''}};
-  r.readAsText(file,'utf-8')
-}
+function importWelcomeJSON(file){if(!file)return;let r=new FileReader();r.onload=()=>{try{let x=JSON.parse(r.result);if(x.unit!=='unit01'||!x.state)throw Error();state=x.state;save();codeModal.classList.remove('show');doctorLabel.textContent='Dr.'+(state.code||'未設定');renderHome();renderPractice();showReport();showToast(`已成功載入 Dr.${state.code||'未設定'} 的第一單元進度。已完成 ${Object.keys(state.answers||{}).length}／12 題。`,'success');welcomeJsonInput.value=''}catch(e){codeModal.classList.add('show');showToast('載入失敗。請選擇由第一單元產生的 JSON 存檔。','error');welcomeJsonInput.value=''}};r.readAsText(file,'utf-8')}
 function goHome(){renderHome();showPage('home')}
 const TOOL_MEANINGS=[['辨識任務','確認題目正在處理的文案能力，先看清楚任務。'],['主題檢查','檢查文字是否偏離原本主題。'],['資訊份量','衡量資訊是否過多、過少，或需要刪減。'],['重點穩定','檢查文案重點是否穩定，前後是否一致。'],['核心診斷','聽出文字真正想說的核心問題。'],['第一眼焦點','模擬讀者第一眼看到什麼，檢查注意焦點。'],['資訊整理','整理事實、原因、結果與判斷理由。'],['執行修改','對問題採取具體修改，替換不適合的寫法。'],['詞句選擇','比較不同詞語與句型，選擇適合的處方。'],['內容修補','補上缺少內容，修復不完整的句子。'],['精簡刪修','剪去重複、空泛與不影響理解的文字。'],['最終確認','完成最後檢查，確認文案可以提交或發布。']];
-function showGuide(){showPage('guide')}
-function showTools(){renderToolAtlas();showPage('tools')}
-function renderToolAtlas(){const box=document.getElementById('toolAtlas');if(!box)return;box.innerHTML=DIAGNOSTIC_PATH.map((item,i)=>{const got=!!state.answers[DATA.questions[i].id],info=TOOL_MEANINGS[i];return `<article class="atlas-tool ${got?'obtained':''}"><div class="atlas-tool-icon">${medicalIcon(item.icon)}<span class="atlas-check">✓</span></div><div class="atlas-number">器械 ${String(i+1).padStart(2,'0')}</div><h3>${item.name}</h3><span class="writing-tag">${info[0]}</span><p>本院用途：${info[1]}</p><small>${got?'已加入診療箱':'完成第 '+(i+1)+' 題後領取'}</small></article>`}).join('')}
-function showPage(id){document.querySelectorAll('.page').forEach(x=>x.classList.remove('active'));document.getElementById(id).classList.add('active');window.scrollTo(0,0);if(id==='practice')renderPractice()}
+function showGuide(){showPage('guide')} function showTools(){renderToolAtlas();showPage('tools')}
+function renderToolAtlas(){const box=document.getElementById('toolAtlas');if(!box||!DATA)return;box.innerHTML=DIAGNOSTIC_PATH.map((item,i)=>{const got=!!state.answers[DATA.questions[i].id],info=TOOL_MEANINGS[i];return `<article class="atlas-tool ${got?'obtained':''}"><div class="atlas-tool-icon">${medicalIcon(item.icon)}<span class="atlas-check">✓</span></div><div class="atlas-number">器械 ${String(i+1).padStart(2,'0')}</div><h3>${item.name}</h3><span class="writing-tag">${info[0]}</span><p>本院用途：${info[1]}</p><small>${got?'已加入診療箱':'完成第 '+(i+1)+' 題後領取'}</small></article>`}).join('')}
+function showPage(id){document.querySelectorAll('.page').forEach(x=>x.classList.remove('active'));const page=document.getElementById(id);if(page)page.classList.add('active');window.scrollTo(0,0);if(id==='practice')renderPractice()}
 function completed(){return Object.keys(state.answers).length} function quizScore(){return DATA.questions.reduce((s,q)=>s+(state.answers[q.id]?.score||0),0)}
-function renderHome(){if(!DATA)return;let n=completed();homeProgress.style.width=(n/12*100)+'%';homeProgressText.textContent=n?`已完成 ${n}／12 題，測驗得分 ${quizScore()}／120`:'尚未開始'}
+function renderHome(){if(!DATA)return;let n=completed();if(homeProgress)homeProgress.style.width=(n/12*100)+'%';if(homeProgressText)homeProgressText.textContent=n?`已完成 ${n}／12 題，測驗得分 ${quizScore()}／120`:'尚未開始'}
 function startQuiz(){let i=DATA.questions.findIndex(q=>!state.answers[q.id]);state.current=i<0?0:i;renderQuestion();showPage('quiz')}
-const DIAGNOSTIC_PATH=[
-  {name:'掛號證',icon:'id-card'},
-  {name:'體溫計',icon:'thermometer'},
-  {name:'體重計',icon:'scale'},
-  {name:'血壓計',icon:'pressure'},
-  {name:'聽診器',icon:'stethoscope'},
-  {name:'瞳孔筆',icon:'penlight'},
-  {name:'病歷板',icon:'clipboard'},
-  {name:'注射器',icon:'syringe'},
-  {name:'藥瓶',icon:'medicine'},
-  {name:'繃帶',icon:'bandage'},
-  {name:'醫療剪刀',icon:'scissors'},
-  {name:'出院章',icon:'discharge'}
-];
+const DIAGNOSTIC_PATH=[{name:'掛號證',icon:'id-card'},{name:'體溫計',icon:'thermometer'},{name:'體重計',icon:'scale'},{name:'血壓計',icon:'pressure'},{name:'聽診器',icon:'stethoscope'},{name:'瞳孔筆',icon:'penlight'},{name:'病歷板',icon:'clipboard'},{name:'注射器',icon:'syringe'},{name:'藥瓶',icon:'medicine'},{name:'繃帶',icon:'bandage'},{name:'醫療剪刀',icon:'scissors'},{name:'出院章',icon:'discharge'}];
 function medicalIcon(type){return `<span class="med-icon ${type}" aria-hidden="true"><i></i><i></i><i></i></span>`}
-function renderSteps(){
-  const collected=DATA.questions.filter(q=>state.answers[q.id]).length;
-  const summary=document.getElementById('toolSummary');
-  if(summary)summary.innerHTML=`<div class="tool-total">${medicalIcon('toolbox')}<span><b>${collected}／12</b><small>醫療工具已收集</small></span></div>`;
-  steps.innerHTML=DATA.questions.map((q,i)=>{
-    const answered=!!state.answers[q.id],item=DIAGNOSTIC_PATH[i];
-    const status=answered?'已完成並取得工具':'尚未完成';
-    return `<button type="button" class="path-step ${i===state.current?'current':''} ${answered?'done':'unanswered'}" onclick="jump(${i})" aria-label="第${i+1}題，${item.name}，${status}">
-      <span class="path-line" aria-hidden="true"></span>
-      <span class="tool-node">${medicalIcon(item.icon)}<span class="tool-check">✓</span></span>
-      <span class="path-copy"><b>${String(i+1).padStart(2,'0')}｜${item.name}</b><small>${q.ability}</small></span>
-    </button>`
-  }).join('')
-}
+function renderSteps(){const collected=DATA.questions.filter(q=>state.answers[q.id]).length;const summary=document.getElementById('toolSummary');if(summary)summary.innerHTML=`<div class="tool-total">${medicalIcon('toolbox')}<span><b>${collected}／12</b><small>醫療工具已收集</small></span></div>`;steps.innerHTML=DATA.questions.map((q,i)=>{const answered=!!state.answers[q.id],item=DIAGNOSTIC_PATH[i],status=answered?'已完成並取得工具':'尚未完成';return `<button type="button" class="path-step ${i===state.current?'current':''} ${answered?'done':'unanswered'}" onclick="jump(${i})" aria-label="第${i+1}題，${item.name}，${status}"><span class="path-line"></span><span class="tool-node">${medicalIcon(item.icon)}<span class="tool-check">✓</span></span><span class="path-copy"><b>${String(i+1).padStart(2,'0')}｜${item.name}</b><small>${q.ability}</small></span></button>`}).join('')}
 function jump(i){document.getElementById('progressNotice')?.remove();state.current=i;save();renderQuestion()}
 function renderQuestion(){selected=[];let q=DATA.questions[state.current],old=state.answers[q.id];qMeta.textContent=`${q.id}｜${q.ability}｜${q.difficulty}｜題目 ${state.current+1}／12`;scenario.innerHTML=`<b>情境</b><br>${esc(q.scenario)}`;questionText.textContent=q.question;options.innerHTML=q.options.map((x,i)=>`<div class="option" onclick="pick(${i},this)"><span class="letter">${String.fromCharCode(65+i)}</span><span>${esc(x)}</span></div>`).join('');hintBox.className='hint';feedback.className='feedback';submitBtn.style.display='inline-block';nextBtn.style.display='none';renderSteps();if(old){selected=[...old.value];document.querySelectorAll('.option').forEach((el,i)=>{if(selected.includes(i))el.classList.add('selected')});showResult(old.correct,false)}}
 function pick(i,el){let q=DATA.questions[state.current];if(q.type==='multi'){selected.includes(i)?selected=selected.filter(x=>x!==i):selected.push(i);el.classList.toggle('selected')}else{selected=[i];document.querySelectorAll('.option').forEach(x=>x.classList.remove('selected'));el.classList.add('selected')}}
 function showHint(n){let q=DATA.questions[state.current];hintBox.className='hint show';hintBox.innerHTML=`<b>提示${n===1?'一':'二'}</b><br>${esc(n===1?q.hint1:q.hint2)}`;state.hints[q.id]=Math.max(state.hints[q.id]||0,n);save()}
 function same(a,b){return JSON.stringify([...a].sort())===JSON.stringify([...b].sort())}
 function submitAnswer(){if(!selected.length){alert('請先選擇答案。');return}let q=DATA.questions[state.current],ok=same(selected,q.answer),hint=state.hints[q.id]||0,score=ok?10-(hint===1?1:hint===2?2:0):0;state.answers[q.id]={value:[...selected],correct:ok,score,time:new Date().toISOString(),ability:q.ability};save();showResult(ok,true);renderHome()}
-function showResult(ok,mark){let q=DATA.questions[state.current];feedback.className='feedback show '+(ok?'good':'bad');let item=DIAGNOSTIC_PATH[state.current];
-  let reward=`<div class="tool-earned"><span>${medicalIcon(item.icon)}</span><div><b>已取得：${item.name}</b><small>第 ${state.current+1} 項工具已加入醫療工具箱</small></div></div>`;
-  feedback.innerHTML=`<b>${ok?'診斷正確':'已完成本項診斷'}</b><br>${esc(ok?q.explanation:'請參考提示，重新檢查。常見錯誤：'+q.error)}${reward}`;if(mark&&ok){submitBtn.style.display='none';nextBtn.style.display='inline-block'}renderSteps()}
-function nextQuestion(){
-  if(state.current<11){state.current++;save();renderQuestion();return}
-  const missing=DATA.questions.map((q,i)=>({q,i})).filter(x=>!state.answers[x.q.id]);
-  if(missing.length){
-    renderSteps();
-    const list=missing.map(x=>x.q.id).join('、');
-    const notice=document.getElementById('progressNotice')||document.createElement('div');
-    notice.id='progressNotice';notice.className='progress-notice';
-    notice.innerHTML=`<b>尚有 ${missing.length} 題未完成</b><br>請從進度區選擇未勾選的題目：${list}`;
-    if(!notice.parentNode)steps.parentNode.insertBefore(notice,steps.nextSibling);
-    notice.scrollIntoView({behavior:'smooth',block:'center'});
-    return;
-  }
-  showPage('practice')
-}
+function showResult(ok,mark){let q=DATA.questions[state.current],item=DIAGNOSTIC_PATH[state.current],reward=`<div class="tool-earned"><span>${medicalIcon(item.icon)}</span><div><b>已取得：${item.name}</b><small>第 ${state.current+1} 項工具已加入醫療工具箱</small></div></div>`;feedback.className='feedback show '+(ok?'good':'bad');feedback.innerHTML=`<b>${ok?'診斷正確':'已完成本項診斷'}</b><br>${esc(ok?q.explanation:'請參考提示，重新檢查。常見錯誤：'+q.error)}${reward}`;if(mark&&ok){submitBtn.style.display='none';nextBtn.style.display='inline-block'}renderSteps()}
+function nextQuestion(){if(state.current<11){state.current++;save();renderQuestion();return}const missing=DATA.questions.map((q,i)=>({q,i})).filter(x=>!state.answers[x.q.id]);if(missing.length){renderSteps();const list=missing.map(x=>x.q.id).join('、'),notice=document.getElementById('progressNotice')||document.createElement('div');notice.id='progressNotice';notice.className='progress-notice';notice.innerHTML=`<b>尚有 ${missing.length} 題未完成</b><br>請從進度區選擇未勾選的題目：${list}`;if(!notice.parentNode)steps.parentNode.insertBefore(notice,steps.nextSibling);notice.scrollIntoView({behavior:'smooth',block:'center'});return}showPage('practice')}
 function renderPractice(){if(!DATA)return;practiceSource.textContent=DATA.practice.source;practiceFields.innerHTML=DATA.practice.fields.map(f=>renderField(f)).join('');DATA.practice.fields.forEach(updateField)}
 function slotClass(slot){const map={place:'slot-yellow',actor:'slot-yellow',action:'slot-yellow',object:'slot-orange',status:'slot-orange',cause:'slot-purple',method:'slot-purple',result:'slot-green',goal:'slot-green',public:'slot-green',benefit:'slot-blue'};return map[slot]||'slot-blue'}
-function displayPattern(t){
-  let out=esc(t.display||t.pattern);
-  const labels={place:'場域',object:'問題對象',actor:'行動者',status:'現況',cause:'原因',result:'結果',method:'方法',goal:'目標',action:'行動',benefit:'利益',public:'公共意義'};
-  for(const slot of t.slots){
-    const label=labels[slot]||'請選擇';
-    const token='【'+label+'】';
-    out=out.replace(token,`<span class="slot-token ${slotClass(slot)}">${token}</span>`);
-  }
-  return out;
-}
-function renderBuilderPattern(f,t,s){
-  const labels={place:'場域',object:'問題對象',actor:'行動者',status:'現況',cause:'原因',result:'結果',method:'方法',goal:'目標',action:'行動',benefit:'利益',public:'公共意義'};
-  let out=esc(t.display||t.pattern);
-  for(const slot of t.slots){
-    const token='【'+(labels[slot]||'請選擇')+'】';
-    const value=s.values?.[slot];
-    const shown=value?esc(value):token;
-    const cls=value?'filled':'empty';
-    out=out.replace(token,`<button type="button" class="builder-slot ${cls} ${s.activeSlot===slot?'current':''}" onclick="activateSlot('${f.id}','${slot}')">${shown}</button>`);
-  }
-  return out;
-}
-function renderField(f){
-  let s=state.practice[f.id]||{template:'',values:{},activeSlot:''};
-  let t=f.templates.find(x=>x.id===s.template);
-  if(t&&!s.activeSlot)s.activeSlot=t.slots.find(x=>!s.values?.[x])||t.slots[0];
-  state.practice[f.id]=s;
-  let templateArea=`<h4>一、選擇句型</h4><div class="template-grid">${f.templates.map(x=>`<button class="template ${s.template===x.id?'active':''}" onclick="chooseTemplate('${f.id}','${x.id}')">${displayPattern(x)}</button>`).join('')}</div>`;
-  if(!t)return `<div class="practice-field" id="field-${f.id}"><h2>${esc(f.name)} <span class="muted" style="font-size:14px">限 ${f.limit} 字</span></h2>${templateArea}<div class="builder-empty">選好句型後，系統會依序帶您完成每一個欄位。</div></div>`;
-  let gid=s.activeSlot||t.slots[0],g=f.groups[gid],done=t.slots.filter(x=>s.values?.[x]).length;
-  let options=g?`<div class="current-picker"><div class="picker-head"><div><b>目前選擇：<span class="group-label">【${esc(g.label)}】</span></b><p>請點選一個適合的詞語，系統會自動前進到下一格。</p></div><div class="completion">${done}／${t.slots.length}</div></div><div class="chips">${g.words.map(w=>`<button class="chip ${s.values?.[gid]===w?'active':''}" onclick="chooseWord('${f.id}','${gid}','${esc(w)}')">${esc(w)}</button>`).join('')}</div></div>`:'';
-  return `<div class="practice-field" id="field-${f.id}"><h2>${esc(f.name)} <span class="muted" style="font-size:14px">限 ${f.limit} 字</span></h2>${templateArea}<h4>二、完成句型</h4><div class="sentence-builder">${renderBuilderPattern(f,t,s)}</div><div class="builder-status">句型完成度：<b>${done}／${t.slots.length}</b>${done===t.slots.length?'　<span class="complete-mark">✓ 已完成</span>':''}</div>${options}<h4>三、完整句子</h4><div class="preview" id="preview-${f.id}">請完成句型。</div><div class="scorebox" id="score-${f.id}"></div><div class="example" id="example-${f.id}"><b>自然表達示範</b><br>${esc(f.example)}<p class="muted">示範句不是唯一答案。您可以點擊上方彩色積木更換詞語。</p></div><div class="actions"><button class="btn secondary" onclick="changeTemplate('${f.id}')">更換句型</button></div></div>`;
-}
-function chooseTemplate(fid,tid){
-  let f=DATA.practice.fields.find(x=>x.id===fid),t=f.templates.find(x=>x.id===tid);
-  let old=state.practice[fid]||{values:{}};
-  state.practice[fid]={template:tid,values:{},activeSlot:t.slots[0]};
-  save();renderPractice();setTimeout(()=>document.getElementById('field-'+fid)?.scrollIntoView({behavior:'smooth',block:'start'}),30);
-}
+function displayPattern(t){let out=esc(t.display||t.pattern),labels={place:'場域',object:'問題對象',actor:'行動者',status:'現況',cause:'原因',result:'結果',method:'方法',goal:'目標',action:'行動',benefit:'利益',public:'公共意義'};for(const slot of t.slots){const token='【'+(labels[slot]||'請選擇')+'】';out=out.replace(token,`<span class="slot-token ${slotClass(slot)}">${token}</span>`)}return out}
+function renderBuilderPattern(f,t,s){const labels={place:'場域',object:'問題對象',actor:'行動者',status:'現況',cause:'原因',result:'結果',method:'方法',goal:'目標',action:'行動',benefit:'利益',public:'公共意義'};let out=esc(t.display||t.pattern);for(const slot of t.slots){const token='【'+(labels[slot]||'請選擇')+'】',value=s.values?.[slot],shown=value?esc(value):token,cls=value?'filled':'empty';out=out.replace(token,`<button type="button" class="builder-slot ${cls} ${s.activeSlot===slot?'current':''}" onclick="activateSlot('${f.id}','${slot}')">${shown}</button>`)}return out}
+function renderField(f){let s=state.practice[f.id]||{template:'',values:{},activeSlot:''},t=f.templates.find(x=>x.id===s.template);if(t&&!s.activeSlot)s.activeSlot=t.slots.find(x=>!s.values?.[x])||t.slots[0];state.practice[f.id]=s;let templateArea=`<h4>一、選擇句型</h4><div class="template-grid">${f.templates.map(x=>`<button class="template ${s.template===x.id?'active':''}" onclick="chooseTemplate('${f.id}','${x.id}')">${displayPattern(x)}</button>`).join('')}</div>`;if(!t)return `<div class="practice-field" id="field-${f.id}"><h2>${esc(f.name)} <span class="muted" style="font-size:14px">限 ${f.limit} 字</span></h2>${templateArea}<div class="builder-empty">選好句型後，系統會依序帶您完成每一個欄位。</div></div>`;let gid=s.activeSlot||t.slots[0],g=f.groups[gid],done=t.slots.filter(x=>s.values?.[x]).length,opts=g?`<div class="current-picker"><div class="picker-head"><div><b>目前選擇：<span class="group-label">【${esc(g.label)}】</span></b><p>請點選一個適合的詞語，系統會自動前進到下一格。</p></div><div class="completion">${done}／${t.slots.length}</div></div><div class="chips">${g.words.map(w=>`<button class="chip ${s.values?.[gid]===w?'active':''}" onclick="chooseWord('${f.id}','${gid}','${esc(w)}')">${esc(w)}</button>`).join('')}</div></div>`:'';return `<div class="practice-field" id="field-${f.id}"><h2>${esc(f.name)} <span class="muted" style="font-size:14px">限 ${f.limit} 字</span></h2>${templateArea}<h4>二、完成句型</h4><div class="sentence-builder">${renderBuilderPattern(f,t,s)}</div><div class="builder-status">句型完成度：<b>${done}／${t.slots.length}</b>${done===t.slots.length?'　<span class="complete-mark">✓ 已完成</span>':''}</div>${opts}<h4>三、完整句子</h4><div class="preview" id="preview-${f.id}">請完成句型。</div><div class="scorebox" id="score-${f.id}"></div><div class="example" id="example-${f.id}"><b>自然表達示範</b><br>${esc(f.example)}<p class="muted">示範句不是唯一答案。您可以點擊上方積木更換詞語。</p></div><div class="actions"><button class="btn secondary" onclick="changeTemplate('${f.id}')">更換句型</button></div></div>`}
+function chooseTemplate(fid,tid){let f=DATA.practice.fields.find(x=>x.id===fid),t=f.templates.find(x=>x.id===tid);state.practice[fid]={template:tid,values:{},activeSlot:t.slots[0]};save();renderPractice();setTimeout(()=>document.getElementById('field-'+fid)?.scrollIntoView({behavior:'smooth',block:'start'}),30)}
 function activateSlot(fid,gid){state.practice[fid].activeSlot=gid;save();renderPractice();setTimeout(()=>document.querySelector(`#field-${fid} .current-picker`)?.scrollIntoView({behavior:'smooth',block:'center'}),30)}
-function chooseWord(fid,gid,w){
-  let f=DATA.practice.fields.find(x=>x.id===fid),s=state.practice[fid],t=f.templates.find(x=>x.id===s.template);
-  s.values[gid]=w;
-  let next=t.slots.find(x=>!s.values?.[x]);
-  s.activeSlot=next||gid;
-  save();renderPractice();
-  setTimeout(()=>{let target=next?document.querySelector(`#field-${fid} .current-picker`):document.getElementById('preview-'+fid);target?.scrollIntoView({behavior:'smooth',block:'center'})},30);
-}
+function chooseWord(fid,gid,w){let f=DATA.practice.fields.find(x=>x.id===fid),s=state.practice[fid],t=f.templates.find(x=>x.id===s.template);s.values[gid]=w;let next=t.slots.find(x=>!s.values?.[x]);s.activeSlot=next||gid;save();renderPractice();setTimeout(()=>{let target=next?document.querySelector(`#field-${fid} .current-picker`):document.getElementById('preview-'+fid);target?.scrollIntoView({behavior:'smooth',block:'center'})},30)}
 function changeTemplate(fid){if(confirm('更換句型會清除這個欄位目前選好的詞語，確定要更換嗎？')){state.practice[fid]={template:'',values:{},activeSlot:''};save();renderPractice();setTimeout(()=>document.getElementById('field-'+fid)?.scrollIntoView({behavior:'smooth',block:'start'}),30)}}
 function buildSentence(f,s){let t=f.templates.find(x=>x.id===s.template);if(!t)return'';let out=t.pattern;for(let slot of t.slots)out=out.replace('{{'+slot+'}}',s.values?.[slot]||'＿＿＿');return out}
-function updateField(f){let s=state.practice[f.id]||{template:'',values:{}},sentence=buildSentence(f,s),t=f.templates.find(x=>x.id===s.template),filled=t&&t.slots.every(x=>s.values?.[x]),content=filled?80:Math.round((t?t.slots.filter(x=>s.values?.[x]).length/t.slots.length:0)*80),structure=filled?10:0,natural=filled&&sentence.length<=f.limit?10:(filled?5:0),total=content+structure+natural;let p=document.getElementById('preview-'+f.id);p.textContent=sentence||'請先選句型與詞語。';document.getElementById('score-'+f.id).innerHTML=`<div class="scorepart">內容完整度<br><b>${content}／80</b></div><div class="scorepart">句型完整度<br><b>${structure}／10</b></div><div class="scorepart">自然語氣<br><b>${natural}／10</b></div><div class="scorepart" style="grid-column:1/-1">總分 <b>${total}／100</b>｜字數 ${sentence.replace(/\s/g,'').length}／${f.limit}</div>`;document.getElementById('example-'+f.id).classList.toggle('show',total===100);s.sentence=sentence;s.score=total;state.practice[f.id]=s;save()}
+function updateField(f){const s=state.practice[f.id]||{template:'',values:{}},preview=document.getElementById('preview-'+f.id),scoreBox=document.getElementById('score-'+f.id),example=document.getElementById('example-'+f.id);if(!preview||!scoreBox||!example)return;const sentence=buildSentence(f,s),t=f.templates.find(x=>x.id===s.template),filled=!!(t&&t.slots.every(x=>s.values?.[x])),selected=t?t.slots.filter(x=>s.values?.[x]).length:0,content=filled?80:Math.round((t?selected/t.slots.length:0)*80),structure=filled?10:0,natural=filled&&sentence.length<=f.limit?10:(filled?5:0),total=content+structure+natural;preview.textContent=sentence||'請完成句型。';scoreBox.innerHTML=`<div class="scorepart">內容完整度<br><b>${content}／80</b></div><div class="scorepart">句型完整度<br><b>${structure}／10</b></div><div class="scorepart">自然語氣<br><b>${natural}／10</b></div><div class="scorepart" style="grid-column:1/-1">總分 <b>${total}／100</b>｜字數 ${sentence.replace(/\s/g,'').length}／${f.limit}</div>`;example.classList.toggle('show',total===100);s.sentence=sentence;s.score=total;state.practice[f.id]=s;save()}
 function finishPractice(){let incomplete=DATA.practice.fields.filter(f=>(state.practice[f.id]?.score||0)<80);if(incomplete.length){alert('請先完成所有欄位。尚未完成：'+incomplete.map(x=>x.name).join('、'));return}state.practiceCompleted=new Date().toISOString();save();showReport()}
 function showReport(){showPage('report');let n=completed(),pScores=DATA.practice.fields.map(f=>state.practice[f.id]?.score||0),pAvg=Math.round(pScores.reduce((a,b)=>a+b,0)/4);reportMeta.textContent=`Dr.${state.code||'未設定'}｜互動題 ${n}／12｜實作平均 ${pAvg} 分`;let by={};DATA.questions.forEach(q=>{by[q.ability]=by[q.ability]||{got:0,max:0};by[q.ability].max+=10;by[q.ability].got+=state.answers[q.id]?.score||0});reportContent.innerHTML=`<div class="card"><h3>互動題</h3><div style="font-size:48px;font-weight:900;color:var(--blue)">${quizScore()}<small style="font-size:16px">／120</small></div>${Object.entries(by).map(([k,v])=>`<div class="bar"><span>${k}</span><div class="barline"><span style="width:${v.got/v.max*100}%"></span></div><b>${v.got}</b></div>`).join('')}</div><div class="card"><h3>智慧填空實作</h3><div style="font-size:48px;font-weight:900;color:var(--green)">${pAvg}<small style="font-size:16px">／100</small></div>${DATA.practice.fields.map((f,i)=>`<div class="bar"><span>${f.name}</span><div class="barline"><span style="width:${pScores[i]}%"></span></div><b>${pScores[i]}</b></div>`).join('')}</div>`}
 function downloadJSON(){let blob=new Blob([JSON.stringify({version:1,unit:'unit01',state},null,2)],{type:'application/json'}),a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=`文案急診室_Dr.${state.code}_第一單元進度.json`;a.click();setTimeout(()=>URL.revokeObjectURL(a.href),1000)}
-let toastTimer=null;
-function showToast(message,type='success'){
-  const box=document.getElementById('toast');
-  if(!box)return;
-  clearTimeout(toastTimer);
-  box.className='toast show '+type;
-  box.innerHTML=`<span class="toast-icon">${type==='success'?'✓':'!'}</span><span>${esc(message)}</span>`;
-  toastTimer=setTimeout(()=>{box.className='toast'},4200);
-}
+let toastTimer=null;function showToast(message,type='success'){const box=document.getElementById('toast');if(!box)return;clearTimeout(toastTimer);box.className='toast show '+type;box.innerHTML=`<span class="toast-icon">${type==='success'?'✓':'!'}</span><span>${esc(message)}</span>`;toastTimer=setTimeout(()=>{box.className='toast'},4200)}
 function importJSON(file){if(!file)return;let r=new FileReader();r.onload=()=>{try{let x=JSON.parse(r.result);if(x.unit!=='unit01'||!x.state)throw Error();state=x.state;save();doctorLabel.textContent='Dr.'+state.code;renderHome();renderPractice();showReport();showToast(`已成功載入 Dr.${state.code||'未設定'} 的第一單元進度。已完成 ${Object.keys(state.answers||{}).length}／12 題。`,'success');jsonInput.value=''}catch(e){showToast('載入失敗。請選擇由第一單元產生的 JSON 存檔。','error');jsonInput.value=''}};r.readAsText(file,'utf-8')}
 function downloadCSV(){let rows=[['Dr.代號','類型','編號','能力／欄位','答案／句子','分數','提示層級','完成時間']];DATA.questions.forEach(q=>{let a=state.answers[q.id];if(a)rows.push(['Dr.'+state.code,'互動題',q.id,q.ability,a.value.map(i=>String.fromCharCode(65+i)).join('|'),a.score,state.hints[q.id]||0,a.time])});DATA.practice.fields.forEach(f=>{let p=state.practice[f.id];if(p?.sentence)rows.push(['Dr.'+state.code,'單元實作',f.id,f.name,p.sentence,p.score,'',state.practiceCompleted||''])});let csv='\ufeff'+rows.map(r=>r.map(v=>'"'+String(v??'').replaceAll('"','""')+'"').join(',')).join('\r\n'),blob=new Blob([csv],{type:'text/csv;charset=utf-8'}),a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=`文案急診室_Dr.${state.code}_第一單元報告.csv`;a.click();setTimeout(()=>URL.revokeObjectURL(a.href),1000)}
 function resetAll(){if(confirm('確定清除第一單元全部紀錄嗎？')){localStorage.removeItem(KEY);location.reload()}}
-// Explicitly expose navigation for Chrome and other browsers.
-Object.assign(window,{goHome,showGuide,showTools,showPage,startQuiz,showReport});
-// Add event listeners as a fallback if inline handlers are restricted or stale HTML is cached.
-document.addEventListener('click',event=>{
-  const button=event.target.closest('[data-nav]');
-  if(!button)return;
-  const target=button.dataset.nav;
-  if(target==='home')goHome();
-  if(target==='guide')showGuide();
-  if(target==='tools')showTools();
-});
+Object.assign(window,{goHome,showGuide,showTools,showPage,startQuiz,showReport});document.addEventListener('click',event=>{const b=event.target.closest('[data-nav]');if(!b)return;const t=b.dataset.nav;if(t==='home')goHome();if(t==='guide')showGuide();if(t==='tools')showTools()});
 init();
