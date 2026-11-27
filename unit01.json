@@ -277,7 +277,8 @@
             "slots": [
               "place",
               "object"
-            ]
+            ],
+            "display": "【場域】+【問題對象】+ 減量"
           },
           {
             "id": "t2",
@@ -286,7 +287,8 @@
             "slots": [
               "place",
               "object"
-            ]
+            ],
+            "display": "【場域】+ 減少使用 +【問題對象】"
           }
         ],
         "groups": {
@@ -321,7 +323,8 @@
               "status",
               "cause",
               "result"
-            ]
+            ],
+            "display": "【行動者】+【現況】+ 因為 +【原因】+ 所以 +【結果】"
           },
           {
             "id": "t2",
@@ -332,7 +335,8 @@
               "status",
               "cause",
               "result"
-            ]
+            ],
+            "display": "【行動者】+【現況】+ 只有 +【原因】+ 因此 +【結果】"
           },
           {
             "id": "t3",
@@ -343,7 +347,8 @@
               "actor",
               "status",
               "result"
-            ]
+            ],
+            "display": "由於 +【原因】+【行動者】+【現況】+【結果】"
           }
         ],
         "groups": {
@@ -395,7 +400,8 @@
               "actor",
               "method",
               "goal"
-            ]
+            ],
+            "display": "【行動者】+ 應透過 +【方法】+ 以 +【目標】"
           },
           {
             "id": "t2",
@@ -405,7 +411,8 @@
               "goal",
               "actor",
               "method"
-            ]
+            ],
+            "display": "為了 +【目標】+【行動者】+ 可 +【方法】"
           }
         ],
         "groups": {
@@ -449,7 +456,8 @@
               "action",
               "benefit",
               "public"
-            ]
+            ],
+            "display": "【行動】+【利益】+ 也讓 +【公共意義】"
           },
           {
             "id": "t2",
@@ -459,7 +467,8 @@
               "benefit",
               "action",
               "public"
-            ]
+            ],
+            "display": "【利益】+ 從 +【行動】+ 開始 + 讓 +【公共意義】"
           }
         ],
         "groups": {
